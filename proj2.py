@@ -6,6 +6,15 @@ import matplotlib.pyplot as plt
 def mean_squared_error(y_true, y_pred):
     return np.mean((y_true - y_pred)**2)
 
+def g(x):
+    print(x.shape[0])
+    
+    return x[:, 0]/(x[:, 1]) * x[:, 2]
+
+def g_e(x, e):
+    error = np.random.uniform(low=-e, high=e, size=(x.shape[0], 1))
+    return x[:, 0]/(x[:, 1]) * x[:, 2] + error[:,0]
+
 def phi(z):
     return np.tanh(z)  # You can replace this with your activation function
 
@@ -60,7 +69,7 @@ def levenberg_marquardt(x, y, w_init, lambda_val=0.00005, max_iterations=100, to
 
         A = J.T @ J + lambda_val * np.eye(len(w))
         b = J.T @ r
-
+        # print(b[:5])
         delta_w = np.linalg.solve(A, -b)
         w_new = w + delta_w
 
@@ -80,14 +89,23 @@ def levenberg_marquardt(x, y, w_init, lambda_val=0.00005, max_iterations=100, to
 
     return w, losses
 
-for lamb in [ 0.000005,0.00005,0.0005,0.005, 0.05,0.5, 5]:
+e_list = [0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1, 2, 5]
+test_errors = []
+train_errors = []
+
+for lamb in [ 0.000005,0.00005,0.0005,0.005]:
+    k = 0.5
     print("--------------------------------------------")
-    for k in [0.5, 1, 1.5]:
+    # for k in [0.5, 1, 1.5]:
+    for e in e_list:
         # Generate random data
         np.random.seed(66)
         N = 500
         x = np.random.uniform(low=-k, high=k, size=(N, 3))
-        y = x[:, 0] * x[:, 1] + x[:, 2]
+        
+        y = g_e(x, e)
+        # y = g(x)
+        # y = x[:, 0] * x[:, 1] + x[:, 2]
 
         
         # Initialize weights
@@ -95,13 +113,8 @@ for lamb in [ 0.000005,0.00005,0.0005,0.005, 0.05,0.5, 5]:
 
         # Run Levenberg-Marquardt algorithm
         learned_w, loss_history = levenberg_marquardt(x, y, w_init, lambda_val=lamb)
-        # Plot training loss versus iterations
-        plt.plot(range(1, len(loss_history) + 1), loss_history, marker='o')
-        plt.xlabel('Iterations')
-        plt.ylabel('Training Loss')
-        plt.title('Training Loss vs Iterations')
-        # plt.show()
-        # print(f"Final training Loss for lambda {lamb}  = {loss_history[-1]}:" )
+
+
         
         # print("Learned weights:")
         # print(learned_w)
@@ -109,7 +122,11 @@ for lamb in [ 0.000005,0.00005,0.0005,0.005, 0.05,0.5, 5]:
         # Generate NT test points
         NT = 100
         x_t = np.random.uniform(low=-k, high=k, size=(NT, 3))
-        y_t = x_t[:, 0] * x_t[:, 1] + x_t[:, 2]
+        y_t = g_e(x_t,e)
+        # y_t = g(x_t)
+        # print(y_t.shape)
+
+        # y_t = x_t[:, 0] * x_t[:, 1] + x_t[:, 2]
 
 
         # Use the trained model to make predictions on the test points
@@ -119,16 +136,19 @@ for lamb in [ 0.000005,0.00005,0.0005,0.005, 0.05,0.5, 5]:
         # Compute the mean squared error on the test points
         test_error = mean_squared_error(y_t, predicted_values)
         training_error = mean_squared_error(y, predicted_values_training)
-
+        test_errors.append(test_error)
+        train_errors.append(training_error)
         # Print the test error
-        print(f"    Test Error of lambda {lamb}, gamma {k} = {test_error:.8f}" )
-        print(f"Training Error of lambda {lamb}, gamma {k} = {training_error:.8f}" )
-            # # Plot training loss versus iterations
-            # plt.plot(range(1, len(loss_history) + 1), loss_history, marker='o')
-            # plt.xlabel('Iterations')
-            # plt.ylabel('Training Loss')
-            # plt.title('Training Loss vs Iterations')
-            # plt.show()
+        print(f"    Test Error of lambda {lamb}, gamma {k}, ε {e} = {test_error:.8f}" )
+        print(f"Training Error of lambda {lamb}, gamma {k}, ε {e} = {training_error:.8f}" )
+        # Plot training loss versus iterations
+    plt.plot(e_list, test_errors, marker='o', label=f"ε = {e}")
+    plt.plot(e_list, train_errors, marker='o', label=f"ε = {e}")
+    # plt.plot(range(1, len(loss_history) + 1), loss_history, marker='o')
+    # plt.xlabel('Iterations')
+    # plt.ylabel('Training Loss')
+    # plt.title('Training Loss vs Iterations')
+    plt.show()
 
             # print("Learned weights:")
             # print(learned_w)
