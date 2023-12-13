@@ -89,7 +89,9 @@ def levenberg_marquardt(x, y, w_init, lambda_val=0.00005, max_iterations=100, to
 
     return w, losses
 
-e_list = [0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1, 2, 5]
+e_list = [0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 15]
+
+
 test_errors = []
 train_errors = []
 
@@ -147,6 +149,8 @@ for lamb in [ 0.000005,0.00005,0.0005,0.005]:
     # plt.plot(range(1, len(loss_history) + 1), loss_history, marker='o')
     # plt.xlabel('Iterations')
     # plt.ylabel('Training Loss')
+    plt.xlabel('ε')
+    plt.ylabel('error rate')
     # plt.title('Training Loss vs Iterations')
     plt.show()
 
